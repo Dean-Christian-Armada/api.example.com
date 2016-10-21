@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 ]
 
 MANUALLY_BUILT_APPS = [
+    "api",
     "core",
     "sample_app",
 ]
