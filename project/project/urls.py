@@ -19,5 +19,6 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^v1/', include('api.v1.urls')),
+    # url(r'^v1/', include('api.v1.urls')), # for api routing like api.example.com
+    url(r'^api/', include('api.urls')), # for api DNS like api routing like example/api/
 ]
