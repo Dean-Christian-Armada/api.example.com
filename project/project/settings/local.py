@@ -1,6 +1,7 @@
 from django.conf import settings
 
 if settings.DEBUG:
+	import os
 	print "--------"
 	print "ON LOCAL"
 	ALLOWED_HOSTS = []
@@ -10,6 +11,6 @@ if settings.DEBUG:
 	DATABASES = {
 	    'default': {
 	        'ENGINE': 'django.db.backends.sqlite3',
-	        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+	        'NAME': os.path.join(settings.BASE_DIR, 'db.sqlite3'),
 	    }
 	}
