@@ -48,6 +48,8 @@ MANUALLY_BUILT_APPS = [
 INSTALLED_APPS += MANUALLY_BUILT_APPS
 
 THIRD_PARTY_APPS = [
+    "rest_framework",
+    "rest_framework_raml",
 ]
 INSTALLED_APPS += THIRD_PARTY_APPS
 
@@ -128,3 +130,30 @@ MEDIA_URL = '/media/'
 
 # COMMENT STATICFIELS_DIRS to run collecstatic
 STATICFILES_DIRS = (STATIC_PATH, )
+
+# START Django Rest Framework settings
+# REST_FRAMEWORK = {
+#     'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.IsAuthenticated',
+#     ),
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'oauth2_provider.ext.rest_framework.OAuth2Authentication',
+#     ),
+#     # Disables the Admin UI of the Django Rest Framework
+#     # Source: http://stackoverflow.com/questions/11898065/how-to-disable-admin-style-browsable-interface-of-django-rest-framework
+#     'DEFAULT_RENDERER_CLASSES': (
+#         'rest_framework.renderers.JSONRenderer',
+#     ),
+#     # Custom Exception Handler
+#     'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
+#     # Throttling
+#     'DEFAULT_THROTTLE_CLASSES': (
+#         'rest_framework.throttling.ScopedRateThrottle',
+#     ),
+#     'DEFAULT_THROTTLE_RATES': {
+#         'login-auth': '3/min'
+#     }
+# }
+# END Django Rest Framework settings
+
+# CORS_ORIGIN_ALLOW_ALL = True

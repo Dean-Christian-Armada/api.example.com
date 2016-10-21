@@ -4,7 +4,5 @@ from django.http import HttpResponse
 # from core import views
 
 urlpatterns = [
- 	# url(r'^docs/', include('rest_framework_docs.urls')),
- 	# url(r'^accounts/', include('api.v1.core.accounts.urls')),
- 	# url(r'^students/', include('api.v1.students.urls')),
+ 	url(r'^artists/', include('api.v1.sample_app.urls')),
 ]

@@ -1,8 +1,9 @@
 from django.conf.urls import url, include
 from django.http import HttpResponse
 
-from api.v1.sample_app import views
+from .import views
 
-# urlpatterns = [
-#  	url(r'(?P<user_account_id>[0-9]+)/units/', views.units_list, name='students-units-list'),
-# ]
+urlpatterns = [
+ 	url(r'^$', views.artists_list, name='artists-list'),
+ 	url(r'^(?P<artist_id>[0-9]+)/$', views.artist_detail, name='artists-detail'),
+]

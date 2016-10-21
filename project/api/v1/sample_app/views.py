@@ -5,28 +5,84 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status, permissions
 
-# from core.accounts.models import UsersAndUnits
-# from core.permissions import StudentPermission
-# from core.standard_messages import errors
-# from core.methods import standardResponse
-# from api.v1.students.serializers import UnitsAndUsersSerializer
+from core.standard_messages import errors
+from core.functions import standardResponse
 
-# class UnitsList(APIView):
-# 	"""
-# 	**GET** - lists all available units
-# 	"""
-# 	serializer_class = UnitsAndUsersSerializer
-# 	permission_classes = (StudentPermission,)
+from sample_app.models import Artist
 
-# 	def get(self, request, *args, **kwargs):
-# 		id_1 = kwargs['user_account_id']
-# 		_array = UsersAndUnits.objects.filter(user_account_id=id_1)
-# 		serializer = self.serializer_class(_array, many=True)
-# 		data = serializer.data
-# 		if data:
-# 			_status = status.HTTP_200_OK
-# 		else:
-# 			_status = status.HTTP_204_NO_CONTENT
-# 		return Response(standardResponse(data=data), status=_status)
-		
-# units_list = UnitsList.as_view()
+from .serializers import ArtistSerializer
+
+class ArtistList(APIView):
+	"""
+		**GET** - lists all available artists
+
+		**POST** - creates a new artist
+	"""
+	serializer_class = ArtistSerializer
+	obj = Artist
+
+	def get(self, request, *args, **kwargs):
+		_array = self.obj.objects.all()
+		serializer = self.serializer_class(_array, many=True)
+		data = serializer.data
+		if data:
+			_status = status.HTTP_200_OK
+		else:
+			_status = status.HTTP_204_NO_CONTENT
+		return Response(standardResponse(data=data), status=_status)
+
+	def post(self, request, *args, **kwargs):
+		r_data = request.data
+		serializer = self.serializer_class(data=request.data)
+		if serializer.is_valid():
+			obj = serializer.save()
+			response = Response(standardResponse(data=serializer.data), status=status.HTTP_201_CREATED)
+			response['Location'] = obj.get_absolute_url()
+			return response
+		else:
+			return Response(standardResponse(errors=serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+artists_list = ArtistList.as_view()
+
+class ArtistsDetail(APIView):
+	"""
+		**GET** - gets a specific artist
+
+		**PUT** - updates an artist
+
+		**DELETES** - deletes an artist
+	"""
+	serializer_class = ArtistSerializer
+	obj = Artist # This is needed as model parameters does not work smoothly on the get_obj custom method
+
+	def get(self, request, *args, **kwargs):
+		# kwargs is used to get the parameters
+		_id = kwargs['artist_id']
+		obj = self.obj.objects.get_or_none(id=_id)
+		if obj:
+			serializer = self.serializer_class(obj)
+			return Response(standardResponse(data=serializer.data), status=status.HTTP_200_OK)
+		else:
+			return Response(status=status.HTTP_404_NOT_FOUND)
+
+	def put(self, request, *args, **kwargs):
+		_id = kwargs['artist_id']
+		obj = self.obj.objects.get_or_none(id=_id)
+		if obj:
+			serializer = self.serializer_class(obj, data=request.data)
+			if serializer.is_valid():
+				serializer.save()
+				return Response(standardResponse(data=serializer.data), status=status.HTTP_200_OK)
+			else:
+				# return Response(serializer.errors, status=status.HTTP_304_NOT_MODIFIED)
+				return Response(standardResponse(errors=serializer.errors), status=status.HTTP_400_BAD_REQUEST)
+
+	def delete(self, request, *args, **kwargs):
+		_id = kwargs['artist_id']
+		obj = self.obj.objects.get_or_none(id=_id)
+		if obj:
+			serializer = self.serializer_class(obj)
+			obj.delete()
+			return Response(standardResponse(data=serializer.data), status=status.HTTP_200_OK)
+		else:
+			return Response(status=status.HTTP_400_BAD_REQUEST)
+artist_detail = ArtistsDetail.as_view()
