@@ -34,7 +34,7 @@ from rest_framework import ISO_8601
 from rest_framework.compat import (
     get_remote_field, unicode_repr, unicode_to_repr, value_from_object
 )
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ErrorDetail, ValidationError
 from rest_framework.settings import api_settings
 from rest_framework.utils import html, humanize_datetime, representation
 
@@ -49,20 +49,34 @@ class empty:
     pass
 
 
-def is_simple_callable(obj):
-    """
-    True if the object is a callable that takes no arguments.
-    """
-    function = inspect.isfunction(obj)
-    method = inspect.ismethod(obj)
+if six.PY3:
+    def is_simple_callable(obj):
+        """
+        True if the object is a callable that takes no arguments.
+        """
+        if not callable(obj):
+            return False
 
-    if not (function or method):
-        return False
+        sig = inspect.signature(obj)
+        params = sig.parameters.values()
+        return all(param.default != param.empty for param in params)
 
-    args, _, _, defaults = inspect.getargspec(obj)
-    len_args = len(args) if function else len(args) - 1
-    len_defaults = len(defaults) if defaults else 0
-    return len_args <= len_defaults
+else:
+    def is_simple_callable(obj):
+        function = inspect.isfunction(obj)
+        method = inspect.ismethod(obj)
+
+        if not (function or method):
+            return False
+
+        if method:
+            is_unbound = obj.im_self is None
+
+        args, _, _, defaults = inspect.getargspec(obj)
+
+        len_args = len(args) if function or is_unbound else len(args) - 1
+        len_defaults = len(defaults) if defaults else 0
+        return len_args <= len_defaults
 
 
 def get_attribute(instance, attrs):
@@ -208,6 +222,18 @@ def iter_options(grouped_choices, cutoff=None, cutoff_text=None):
     if cutoff and count >= cutoff and cutoff_text:
         cutoff_text = cutoff_text.format(count=cutoff)
         yield Option(value='n/a', display_text=cutoff_text, disabled=True)
+
+
+def get_error_detail(exc_info):
+    """
+    Given a Django ValidationError, return a list of ErrorDetail,
+    with the `code` populated.
+    """
+    code = getattr(exc_info, 'code', None) or 'invalid'
+    return [
+        ErrorDetail(msg, code=code)
+        for msg in exc_info.messages
+    ]
 
 
 class CreateOnlyDefault(object):
@@ -511,7 +537,7 @@ class Field(object):
                     raise
                 errors.extend(exc.detail)
             except DjangoValidationError as exc:
-                errors.extend(exc.messages)
+                errors.extend(get_error_detail(exc))
         if errors:
             raise ValidationError(errors)
 
@@ -549,7 +575,7 @@ class Field(object):
             msg = MISSING_ERROR_MESSAGE.format(class_name=class_name, key=key)
             raise AssertionError(msg)
         message_string = msg.format(**kwargs)
-        raise ValidationError(message_string)
+        raise ValidationError(message_string, code=key)
 
     @cached_property
     def root(self):
@@ -1568,9 +1594,21 @@ class JSONField(Field):
         self.binary = kwargs.pop('binary', False)
         super(JSONField, self).__init__(*args, **kwargs)
 
+    def get_value(self, dictionary):
+        if html.is_html_input(dictionary) and self.field_name in dictionary:
+            # When HTML form input is used, mark up the input
+            # as being a JSON string, rather than a JSON primative.
+            class JSONString(six.text_type):
+                def __new__(self, value):
+                    ret = six.text_type.__new__(self, value)
+                    ret.is_json_string = True
+                    return ret
+            return JSONString(dictionary[self.field_name])
+        return dictionary.get(self.field_name, empty)
+
     def to_internal_value(self, data):
         try:
-            if self.binary:
+            if self.binary or getattr(data, 'is_json_string', False):
                 if isinstance(data, six.binary_type):
                     data = data.decode('utf-8')
                 return json.loads(data)
