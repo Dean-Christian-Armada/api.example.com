@@ -1,7 +1,7 @@
 # Source: http://stackoverflow.com/questions/23755523/how-to-reset-migrations-in-django-1-7
 """
-Run this file from a Django =1.7 project root. 
-Removes all migration files from all apps in a project.
+Run this file from a project root. 
+Removes all migration files from all apps in a project for production purposes
 """ 
 from unipath import Path
 
@@ -11,11 +11,11 @@ dir_list = current_dir.listdir()
 
 print dir_list
 
-# for paths in dir_list:
-#     migration_folder = paths.child('migrations')
-#     if migration_folder.exists():
-#         list_files = migration_folder.listdir()
-#         for files in list_files:
-#             split = files.components()
-#             if split[-1] != Path('__init__.py'):
-#                 files.remove()
+for paths in dir_list:
+    migration_folder = paths.child('migrations')
+    if migration_folder.exists():
+        list_files = migration_folder.listdir()
+        for files in list_files:
+            split = files.components()
+            if split[-1] != Path('__init__.py'):
+                files.remove()
