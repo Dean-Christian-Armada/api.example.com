@@ -15,5 +15,6 @@ ramlfications==0.1.9
 requests==2.11.1
 six==1.10.0
 termcolor==1.1.0
+Unipath==1.1
 uritemplate==3.0.0
 xmltodict==0.10.2
