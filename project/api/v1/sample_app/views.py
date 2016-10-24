@@ -73,7 +73,7 @@ class ArtistsDetail(APIView):
 
 	def delete(self, request, *args, **kwargs):
 		_id = kwargs['artist_id']
-		obj = self.obj.objects.get_or_none(id=_id)
+		obj = get_object_or_404(self.obj, pk=_id)
 		if obj:
 			serializer = self.serializer_class(obj)
 			obj.delete()
