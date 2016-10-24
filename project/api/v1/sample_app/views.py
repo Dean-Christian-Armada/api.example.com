@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
@@ -57,24 +57,19 @@ class ArtistsDetail(APIView):
 	def get(self, request, *args, **kwargs):
 		# kwargs is used to get the parameters
 		_id = kwargs['artist_id']
-		obj = self.obj.objects.get_or_none(id=_id)
+		obj = get_object_or_404(self.obj, pk=_id)
 		if obj:
 			serializer = self.serializer_class(obj)
 			return Response(standardResponse(data=serializer.data), status=status.HTTP_200_OK)
-		else:
-			return Response(status=status.HTTP_404_NOT_FOUND)
 
 	def put(self, request, *args, **kwargs):
 		_id = kwargs['artist_id']
-		obj = self.obj.objects.get_or_none(id=_id)
+		obj = get_object_or_404(self.obj, pk=_id)
 		if obj:
 			serializer = self.serializer_class(obj, data=request.data)
 			if serializer.is_valid():
 				serializer.save()
 				return Response(standardResponse(data=serializer.data), status=status.HTTP_200_OK)
-			else:
-				# return Response(serializer.errors, status=status.HTTP_304_NOT_MODIFIED)
-				return Response(standardResponse(errors=serializer.errors), status=status.HTTP_400_BAD_REQUEST)
 
 	def delete(self, request, *args, **kwargs):
 		_id = kwargs['artist_id']
@@ -83,6 +78,4 @@ class ArtistsDetail(APIView):
 			serializer = self.serializer_class(obj)
 			obj.delete()
 			return Response(standardResponse(data=serializer.data), status=status.HTTP_200_OK)
-		else:
-			return Response(status=status.HTTP_400_BAD_REQUEST)
 artist_detail = ArtistsDetail.as_view()
